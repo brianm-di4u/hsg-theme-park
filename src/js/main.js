@@ -14,9 +14,11 @@ import { newState } from './scenarios.js';
 import { step as simStep } from './sim.js';
 import { sfx, setOn, setVolume, ambient } from './audio.js';
 import { mainStreet, autoPlace, autoBlueprint, pathOrder } from './plan.js';
+import { R3, boot as boot3d, resize as resize3d, draw as draw3d, gfxState, webglAvailable, syncCamera, setQuality, use3d, thumb } from './gfx/r3d.js';
 
 const cv = document.getElementById('cv');
-const ctx = cv.getContext('2d', { alpha: false });
+const glc = document.getElementById('gl');
+const ctx = cv.getContext('2d', { alpha: true });
 const scr = document.getElementById('screen');
 let demo = null;
 
@@ -40,6 +42,7 @@ function resize() {
   cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
   setView(W, H, dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  resize3d(W, H, dpr);
   G.dirty = true;
 }
 window.addEventListener('resize', resize);
@@ -272,7 +275,7 @@ cv.addEventListener('pointermove', (e) => {
   if (pinch && ptrs.size >= 2) {
     const [a, b] = [...ptrs.values()];
     const d = Math.hypot(a.x - b.x, a.y - b.y), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-    zoomAt(Math.max(0.5, Math.min(2, pinch.z * d / pinch.d)), mx, my);
+    zoomAt(Math.max(zmin(), Math.min(2, pinch.z * d / pinch.d)), mx, my);
     view.cam.x -= (mx - pinch.mx) / view.cam.z; view.cam.y -= (my - pinch.my) / view.cam.z;
     pinch.mx = mx; pinch.my = my; G.dirty = true; return;
   }
@@ -311,8 +314,10 @@ cv.addEventListener('pointercancel', endPtr);
 cv.addEventListener('wheel', (e) => {
   if (G.scene !== 'park') return;
   e.preventDefault();
-  zoomAt(Math.max(0.5, Math.min(2, view.cam.z * (e.deltaY < 0 ? 1.12 : 1 / 1.12))), e.clientX, e.clientY);
+  zoomAt(Math.max(zmin(), Math.min(2, view.cam.z * (e.deltaY < 0 ? 1.12 : 1 / 1.12))), e.clientX, e.clientY);
 }, { passive: false });
+// the 3D view can pull back further, until the ridges around the park and the sky come into view
+function zmin() { return view.g3 ? 0.32 : 0.5; }
 function zoomAt(z, sx, sy) {
   const c = view.cam;
   const wx = c.x + (sx - view.W / 2) / c.z, wy = c.y + (sy - view.H / 2) / c.z;
@@ -346,7 +351,7 @@ document.addEventListener('keydown', (e) => {
   if (k === ' ' && !onBtn) { togglePause(); e.preventDefault(); return; }
   if (k >= '1' && k <= '4') { setSpeed([1, 2, 4, 8][+k - 1]); return; }
   if (k === '+' || k === '=') { zoomAt(Math.min(2, view.cam.z * 1.15), view.W / 2, view.H / 2); return; }
-  if (k === '-' || k === '_') { zoomAt(Math.max(0.5, view.cam.z / 1.15), view.W / 2, view.H / 2); return; }
+  if (k === '-' || k === '_') { zoomAt(Math.max(zmin(), view.cam.z / 1.15), view.W / 2, view.H / 2); return; }
   if (k === 'r' || k === 'R') { G.rot = (G.rot + 1) & 3; updateGhost(); return; }
   if (k === 'i' || k === 'I') return setTool('inspect');
   if (k === 'p' || k === 'P') return setTool('path');
@@ -470,6 +475,18 @@ function uiAct(a, arg, el) {
       else G.settings[arg] = !G.settings[arg];
       saveSettings(); applySettings(); scr.innerHTML = screenHTML('settings'); { const t = scr.querySelector(`[data-arg="${arg}"]`); if (t) t.focus(); } return;
     }
+    case 'gfx': {
+      G.settings.gfx = G.settings.gfx === '2d' ? 'auto' : '2d'; saveSettings();
+      const on = G.settings.gfx !== '2d';
+      if (on && !R3.ready && !R3.loading && webglAvailable()) start3d(); else { use3d(on); glc.hidden = !view.g3; document.body.classList.toggle('g3', !!view.g3); }
+      G.dirty = true; scr.innerHTML = screenHTML('settings'); { const t = scr.querySelector('[data-act="gfx"]'); if (t) t.focus(); } return;
+    }
+    case 'quality': {
+      const order = ['auto', 'high', 'medium', 'low'], cur = G.settings.quality || 'auto';
+      G.settings.quality = order[(order.indexOf(cur) + 1) % order.length]; saveSettings();
+      if (R3.ready) setQuality(G.settings.quality === 'auto' ? (R3.soft ? 'low' : phone() ? 'medium' : 'high') : G.settings.quality);
+      G.dirty = true; scr.innerHTML = screenHTML('settings'); { const t = scr.querySelector('[data-act="quality"]'); if (t) t.focus(); } return;
+    }
     case 'text': G.settings.text = +arg; saveSettings(); applySettings(); scr.innerHTML = screenHTML('settings'); return;
     case 'spring': doAct('continue'); return showScene('park');
     case 'keepPlaying': S.pending = null; return showScene('park');
@@ -487,6 +504,7 @@ function frame(t) {
   const dt = Math.min(100, t - last); last = t;
   const S = G.S;
   if (G.scene === 'park' && S) {
+    view.cine = false;
     if (!G.paused && !S.pending) {
       acc += dt * G.speed * TPS / 1000;
       let n = Math.floor(acc);
@@ -501,14 +519,26 @@ function frame(t) {
       else G.follow = false;
     }
     if (G.testRun) { const p = (performance.now() - G.testRun.t0) / 2500; view.testRun = p < 1 ? { id: G.testRun.id, p } : null; if (p >= 1) G.testRun = null; G.dirty = true; }
+    if (view.g3 && G.paused && !window.__TEST__ && !R3.soft && !view.reduced) G.dirty = true;
     if (G.dirty) { view.personScale = 1; render(ctx, S, dt); G.dirty = false; }
+    autoQuality(dt);
     if (t - hudT > 200) { hudT = t; renderHud(); if (!G.paused && (G.panel === 'obj' || G.panel === 'guest' || G.panel === 'guests' || G.panel === 'finances' || G.panel === 'goals' || G.panel === 'rating')) renderPanelSafe(); ambient(S.guests.length, S.weather.kind === 'rain' || S.weather.kind === 'storm', !G.paused); }
   } else if (demo && G.dirty) {
-    render(ctx, demo, dt); G.dirty = false;
+    view.cine = !!view.g3; render(ctx, demo, dt); G.dirty = false;
   } else if (demo && !window.__TEST__ && !view.reduced && G.scene === 'title') {
-    simStep(demo, 1); view.cam.x += dt * 0.004; render(ctx, demo, dt);
+    simStep(demo, 1); view.cam.x += dt * 0.004; view.cine = !!view.g3; render(ctx, demo, dt);
   }
   requestAnimationFrame(frame);
+}
+// Slow devices: if the running park averages under ~28 fps for a few seconds, step the 3D quality down once per level
+// (never on software GL, where every preset is slow, and never over a quality the player picked).
+const aq = { n: 0, sum: 0 };
+function autoQuality(dt) {
+  if (!view.g3 || R3.soft || G.paused || (G.settings.quality && G.settings.quality !== 'auto') || document.hidden) { aq.n = 0; aq.sum = 0; return; }
+  aq.n++; aq.sum += dt;
+  if (aq.n < 180) return;
+  const avg = aq.sum / aq.n; aq.n = 0; aq.sum = 0;
+  if (avg > 36 && R3.quality !== 'low') { const q = R3.quality === 'high' ? 'medium' : 'low'; setQuality(q); toast(`Graphics set to ${q} for smoother play (Settings to change).`); }
 }
 // Re-rendering a panel while the user is pressing one of its buttons would swallow the click.
 function renderPanelSafe() {
@@ -523,7 +553,7 @@ document.addEventListener('pointerup', () => { setTimeout(() => { G.pressing = f
 // ---- test hooks --------------------------------------------------------------------------------
 function summary() {
   const S = G.S;
-  const base = { scene: G.shown === 'park' ? 'park' : G.shown || G.scene, paused: G.paused, speed: G.speed, tool: G.tool, placeType: G.placeType, panel: G.panel, zoom: view.cam.z, cards: G.progress.cards.length, stars: G.progress.stars, storageOk: G.storageOk, settings: G.settings };
+  const base = { gfx: gfxState(), scene: G.shown === 'park' ? 'park' : G.shown || G.scene, paused: G.paused, speed: G.speed, tool: G.tool, placeType: G.placeType, panel: G.panel, zoom: view.cam.z, cards: G.progress.cards.length, stars: G.progress.stars, storageOk: G.storageOk, settings: G.settings };
   if (!S) return base;
   return {
     ...base,
@@ -545,7 +575,9 @@ function summary() {
   };
 }
 function isIdle() {
-  return performance.now() >= G.trans && !G.testRun && !G.drag && !pinch;
+  // the 3D view counts as busy while it loads (so shots never catch the 2D stand-in) and while a paused frame is queued
+  const g3busy = (R3.want && !R3.ready && !R3.failed) || (view.g3 && G.dirty && (G.paused || G.scene !== 'park'));
+  return performance.now() >= G.trans && !G.testRun && !G.drag && !pinch && !g3busy;
 }
 const hooks = {
   seed(n) { G.seed = n | 0; if (G.S) G.S.rng = n | 0; return true; },
@@ -569,7 +601,7 @@ const hooks = {
     return summary();
   },
   isIdle,
-  step(n = 1) { if (G.S) { runTicks(n); updateGhost(); G.dirty = true; renderHud(); renderPanel(); render(ctx, G.S, 16); G.dirty = false; } return summary(); },
+  step(n = 1) { if (G.S) { runTicks(n); updateGhost(); G.dirty = true; renderHud(); renderPanel(); if (!view.g3) { render(ctx, G.S, 16); G.dirty = false; } } return summary(); },
   pause() { G.paused = true; renderHud(); return true; },
   resume() { G.paused = false; renderHud(); return true; },
   scene(name) { if (name === 'park' && !G.S) startGame({ scenario: 1, seed: G.seed }); showScene(name); return summary(); },
@@ -587,7 +619,8 @@ const hooks = {
       case 'panel': setPanel(a[0], a[1]); return summary();
       case 'camera': { if (a[0] != null) centerOn(a[0] + 0.5, a[1] + 0.5, S ? S.map.height[idx(S, a[0], a[1])] : 0); if (a[2]) view.cam.z = a[2]; G.dirty = true; return summary(); }
       case 'zoom': view.cam.z = a[0]; G.dirty = true; return summary();
-      case 'tileToScreen': { const h = a[2] != null ? a[2] : S.map.height[idx(S, a[0], a[1])]; render(ctx, S, 0); const p = P(a[0] + 0.5, a[1] + 0.5, h); return { x: Math.round(p[0]), y: Math.round(p[1]) }; }
+      case 'pickAt': { const T = pick(S, a[0], a[1]); return T ? { x: T.x, y: T.y } : null; }
+      case 'tileToScreen': { const h = a[2] != null ? a[2] : S.map.height[idx(S, a[0], a[1])]; if (view.g3) syncCamera(); else render(ctx, S, 0); const p = P(a[0] + 0.5, a[1] + 0.5, h); return { x: Math.round(p[0]), y: Math.round(p[1]) }; }
       case 'select': { G.sel = { kind: a[0], id: a[1] }; view.sel = G.sel; setPanel(a[0] === 'guest' ? 'guest' : 'obj', a[1]); return summary(); }
       case 'follow': G.follow = !!a[0]; return summary();
       case 'spawn': {
@@ -658,3 +691,18 @@ try {
 showScene('title');
 G.dirty = true;
 requestAnimationFrame(frame);
+// the 3D view loads after first paint; the Canvas renderer stays as the fallback (no WebGL, ?gfx=2d, or the setting)
+const gfxPref = new URLSearchParams(location.search).get('gfx') || G.settings.gfx || 'auto';
+function start3d() {
+  return boot3d(glc, { quality: ['high', 'medium', 'low'].includes(G.settings.quality) ? G.settings.quality : null })
+    .then(() => { glc.hidden = false; document.body.classList.add('g3'); G.dirty = true; refresh(); })
+    .catch(() => { glc.hidden = true; G.dirty = true; });
+}
+// after the page's load event, so three.js and the asset scripts never hold up first paint or the hooks
+if (gfxPref !== '2d' && webglAvailable()) {
+  const go = () => setTimeout(() => requestAnimationFrame(start3d), 0);
+  if (document.readyState === 'complete') go(); else window.addEventListener('load', go, { once: true });
+}
+G.hooks.setQuality = (q) => { setQuality(q); G.dirty = true; };
+G.hooks.thumb = (type) => (view.g3 ? thumb(type) : null);
+void draw3d;

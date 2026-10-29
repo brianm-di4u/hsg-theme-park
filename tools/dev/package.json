@@ -1,0 +1,1 @@
+{ "name": "sct-dev-tools", "private": true, "description": "Build-time only: three.js source for the vendored bundle, esbuild to bundle it.", "devDependencies": { "three": "0.186.1", "esbuild": "0.28.2" } }

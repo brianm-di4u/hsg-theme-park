@@ -113,7 +113,8 @@ export const tests = [
       await t.game('act', 'autoPlace', 'bench');
       await t.game('act', 'loan', 10000);
       await t.game('act', 'hire', 'keeper', true);
-      await t.page.waitForTimeout(100);
+      // the announcement lands on a 30 ms timer; under software GL a 3D frame can hold the main thread longer
+      await t.page.waitForFunction(() => document.getElementById('live').textContent.length > 5, null, { timeout: 4000 }).catch(() => {});
       const live = await t.page.textContent('#live');
       t.expect(live.length > 5, `live region: "${live}"`);
       await t.reload();

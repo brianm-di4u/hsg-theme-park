@@ -1,0 +1,110 @@
+{
+ "icon-inspect": {
+  "file": "icon-inspect.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 4550
+ },
+ "icon-paths": {
+  "file": "icon-paths.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 4914
+ },
+ "icon-rides": {
+  "file": "icon-rides.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 7062
+ },
+ "icon-coasters": {
+  "file": "icon-coasters.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 6080
+ },
+ "icon-water": {
+  "file": "icon-water.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 5788
+ },
+ "icon-shops": {
+  "file": "icon-shops.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 5542
+ },
+ "icon-scenery": {
+  "file": "icon-scenery.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 6002
+ },
+ "icon-terrain": {
+  "file": "icon-terrain.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 5428
+ },
+ "icon-demolish": {
+  "file": "icon-demolish.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 3470
+ },
+ "icon-staff": {
+  "file": "icon-staff.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 5094
+ },
+ "icon-park": {
+  "file": "icon-park.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 4356
+ },
+ "icon-sun": {
+  "file": "icon-sun.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 6458
+ },
+ "icon-cloud": {
+  "file": "icon-cloud.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 3794
+ },
+ "icon-rain": {
+  "file": "icon-rain.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 5950
+ },
+ "icon-storm": {
+  "file": "icon-storm.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 3964
+ },
+ "icon-cash": {
+  "file": "icon-cash.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 5402
+ },
+ "icon-guests": {
+  "file": "icon-guests.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 7158
+ },
+ "icon-rating": {
+  "file": "icon-rating.webp",
+  "w": 96,
+  "h": 96,
+  "bytes": 5194
+ }
+}

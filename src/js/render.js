@@ -19,10 +19,11 @@ function updateOrigin() {
 }
 // world (tile x, tile y, level z) → CSS px
 export function P(x, y, z) {
+  if (view.g3) return view.g3.project(x, y, z);
   const Z = view.cam.z;
   return [(x - y) * (TW / 2) * Z + view.ox, ((x + y) * (TH / 2) - z * LV) * Z + view.oy];
 }
-export function worldPx(x, y, z) { return [(x - y) * (TW / 2), (x + y) * (TH / 2) - z * LV]; }
+export function worldPx(x, y, z) { if (view.g3) return view.g3.worldPx(x, y, z); return [(x - y) * (TW / 2), (x + y) * (TH / 2) - z * LV]; }
 export function centerOn(x, y, z) { const [wx, wy] = worldPx(x, y, z); view.cam.x = wx; view.cam.y = wy; }
 
 // ---- colours -----------------------------------------------------------------------------
@@ -601,6 +602,7 @@ function bigFootprints(S) {
 export function render(ctx, S, dt) {
   view.t += dt; frameNo++;
   updateOrigin();
+  if (view.g3) return render3(ctx, S, dt);
   const { W, H } = view, M = S.map, w = M.w, h = M.h;
   const na = nightAlpha(S);
   const night = na > 0.2;
@@ -707,6 +709,30 @@ export function render(ctx, S, dt) {
   }
 }
 
+// 3D view: the WebGL canvas below draws the world; this 2D canvas on top keeps the status pins, the selection,
+// the build ghost and queue counts, all placed with P() through the 3D camera.
+function render3(ctx, S, dt) {
+  const { W, H } = view, Z = view.cam.z;
+  ctx.clearRect(0, 0, W, H);
+  view.g3.draw(S, dt);
+  const queueAt = new Map();
+  for (const gg of S.guests) if (gg.st === 'queue') queueAt.set(gg.ti, (queueAt.get(gg.ti) || 0) + 1);
+  const w = S.map.w;
+  if (Z >= 0.6) for (const [i, q] of queueAt) if (q > 16) { const [qx, qy] = P(i % w + 0.5, Math.floor(i / w) + 0.5, S.map.height[i]); badge(ctx, qx, qy - 26 * Z, '👥 +' + (q - 16) + ' in line', '#34424A'); }
+  for (const o of S.objects) overlayBadges(ctx, S, o, true);
+  if (view.sel && view.sel.kind === 'obj') { const o = S.objects.find((x) => x.id === view.sel.id); if (o) outline(ctx, S, o, '#F4C542'); }
+  if (view.sel && view.sel.kind === 'guest') {
+    const gg = S.guests.find((g) => g.id === view.sel.id);
+    if (gg && gg.st !== 'ride') {
+      const px = gg.x + (hash2(gg.id, 1) - 0.5) * 0.5, py = gg.y + (hash2(gg.id, 2) - 0.5) * 0.5;
+      const [hx, hy] = P(px, py, gg.z); const [, ty] = P(px, py, gg.z + 2.2);
+      ctx.strokeStyle = '#F4C542'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(hx, hy, 9 * Z, 5 * Z, 0, 0, 7); ctx.stroke();
+      ctx.fillStyle = '#F4C542'; ctx.strokeStyle = '#1F2A24'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(hx, ty - 2 * Z); ctx.lineTo(hx - 6 * Z, ty - 12 * Z); ctx.lineTo(hx + 6 * Z, ty - 12 * Z); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+  }
+  drawGhost(ctx, S);
+}
+
 const badgeW = new Map();
 function badge(ctx, x, y, text, bg) {
   const Z = Math.max(0.8, view.cam.z);
@@ -717,7 +743,7 @@ function badge(ctx, x, y, text, bg) {
   ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x - w / 2, y - 8 * Z, w, 15 * Z, 4 * Z) : ctx.rect(x - w / 2, y - 8 * Z, w, 15 * Z); ctx.fill();
   ctx.fillStyle = '#FFF'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y); ctx.textBaseline = 'alphabetic';
 }
-function overlayBadges(ctx, S, o) {
+function overlayBadges(ctx, S, o, pins) {
   if (o.kind !== 'ride' && o.kind !== 'track' && o.kind !== 'stall' && o.kind !== 'special') return;
   if (o.kind === 'stall' && o.type === 'bench') return;
   const cx = o.cells ? o.cells[1].x + 0.5 : o.x + o.n / 2, cy = o.cells ? o.cells[1].y + 0.5 : o.y + o.n / 2;
@@ -726,8 +752,10 @@ function overlayBadges(ctx, S, o) {
   else if (o.broken) badge(ctx, sx, sy, '🔧 Broken', '#9A2A1C');
   else if (o.status === 'testfail') badge(ctx, sx, sy, '✖ Test failed', '#9A2A1C');
   else if (o.status === 'closed') badge(ctx, sx, sy, '⛔ Closed', '#574A37');
-  else if (o.wx) badge(ctx, sx, sy, '⚡ Storm', '#34424A');
-  else if (o.cal === false && o.status !== 'standing') badge(ctx, sx, sy, '☂ Closed (season)', '#34424A');
+  // weather and season closures are not the player's to fix: in 3D they are small icon pins (the HUD names the weather)
+  // weather and season closures are not the player's to fix: the 3D view leaves them to the HUD and the ride window
+  else if (o.wx && !pins && view.sel && view.sel.id === o.id) badge(ctx, sx, sy, '⚡ Storm', '#34424A');
+  else if (o.cal === false && o.status !== 'standing' && !pins) badge(ctx, sx, sy, '☂ Closed (season)', '#34424A');
 }
 function outline(ctx, S, o, col) {
   ctx.lineWidth = 2; ctx.strokeStyle = col;
@@ -758,6 +786,7 @@ function drawGhost(ctx, S) {
 
 // screen (CSS px) → tile, front-most first. Returns {x, y, i} or null.
 export function pick(S, sx, sy) {
+  if (view.g3) return view.g3.pick(S, sx, sy);
   updateOrigin();
   const M = S.map, w = M.w, h = M.h, Z = view.cam.z;
   for (let d = w + h - 2; d >= 0; d--) {

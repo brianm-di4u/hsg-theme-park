@@ -77,3 +77,13 @@ pathfinding" (redblobgames.com; no explicit code license found on the page, so r
 
 No sample code is included in the game; there is nothing to attribute in source comments beyond the
 ideas credited here.
+
+## Vendored libraries and generated assets (visual campaign)
+| Item | Source | License | Version | Where |
+|---|---|---|---|---|
+| three.js | npm `three@0.186.1` (https://www.npmjs.com/package/three), bundled with esbuild 0.28.2 by `tools/build-vendor.mjs` (core plus `BufferGeometryUtils`) | MIT, `vendor/three-LICENSE` | r186.1 | `vendor/three.min.js`, loaded as a classic script after first paint |
+| Elevation and land cover | USGS 3DEP DEM and USGS/MRLC NLCD 2021, fetched by `tools/geo/fetch.mjs`, baked by `tools/geo/bake.mjs` | U.S. federal works, public domain | sampled 2026-10-29 | `assets/dem.js` (see `research/terrain.md`) |
+| 3D models | made for this game in Blender 5.2 by `art-src/blender/build_models.py` | MIT (this repository) | — | `assets/models.js` |
+| Painted UI icons | generated for this game with OpenAI image generation (via Codex), packed by `shared/test-harness/art-pack.mjs` | MIT (this repository) | — | `art-src/icons/` (PNG, git-ignored) → `assets/icon-*.webp` |
+
+The geo tools adapt the TIFF/PNG readers in `games/fishing/tools/geo/` (same repository). No other third-party code is included.

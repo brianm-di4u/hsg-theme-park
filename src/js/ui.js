@@ -32,18 +32,18 @@ export function renderHud() {
   if (!S || G.scene !== 'park') { el.hidden = true; return; }
   el.hidden = false;
   if (!hudBuilt) {
-    el.innerHTML = `<span class="park" id="h-park"></span><span class="stat" title="Date" id="h-date"></span><span class="stat" title="Time" id="h-time"></span><span class="stat" title="Weather" id="h-wx"></span><span class="stat" title="Cash" id="h-cash"></span><span class="stat" title="Guests in the park" id="h-guests"></span><span class="stat" title="Park rating" id="h-rating"></span><span class="grow"></span><span class="speed" role="group" aria-label="Time"><button data-act="pause" id="h-pause"></button>${[1, 2, 4, 8].map((n) => `<button data-act="speed" data-arg="${n}" aria-label="Speed ${n} times">${n}×</button>`).join('')}</span><button class="hudbtn" data-act="panel" data-arg="park" aria-label="Park menu">☰ Park</button>`;
+    el.innerHTML = `<span class="park" id="h-park"></span><span class="stat" title="Date" id="h-date"></span><span class="stat" title="Time" id="h-time"></span><span class="stat" title="Weather" id="h-wx"></span><span class="stat" title="Cash" id="h-cash"></span><span class="stat" title="Guests in the park" id="h-guests"></span><span class="stat" title="Park rating" id="h-rating"></span><span class="grow"></span><span class="speed" role="group" aria-label="Time"><button data-act="pause" id="h-pause"></button>${[1, 2, 4, 8].map((n) => `<button data-act="speed" data-arg="${n}" aria-label="Speed ${n} times">${n}×</button>`).join('')}</span><button class="hudbtn" data-act="panel" data-arg="park" aria-label="Park menu">☰<span class="pk"> Park</span></button>`;
     hudBuilt = true;
   }
   const W = WX[S.weather.kind];
   setText('h-park', esc(S.park.name));
-  setText('h-date', `<b>${DOWS[S.dow]}</b> ${MONTHS[Math.min(6, S.month)]} ${S.year}`);
+  setText('h-date', `<b>${DOWS[S.dow]}</b> <span class="mon">${MONTHS[Math.min(6, S.month)]}</span><span class="mo3">${MONTHS[Math.min(6, S.month)].slice(0, 3)}</span><span class="yr"> ${S.year}</span>`);
   setText('h-time', clock(S));
-  setText('h-wx', `${W[0]} ${W[1]} ${S.weather.temp}°F`);
-  setText('h-cash', `💵 <b>${money(S.finance.cash)}</b>`);
+  setText('h-wx', `${icon({ sun: 'sun', cloud: 'cloud', rain: 'rain', storm: 'storm' }[S.weather.kind], W[0])} <span class="wxw">${W[1]}</span> ${S.weather.temp}°F`);
+  setText('h-cash', `${icon('cash', '💵')} <b>${money(S.finance.cash)}</b>`);
   $('h-cash').classList.toggle('neg', S.finance.cash < 0);
-  setText('h-guests', `👥 <b>${S.guests.length}</b>`);
-  setText('h-rating', `★ <b>${Math.round(S.park.rating)}</b>`);
+  setText('h-guests', `${icon('guests', '👥')} <b>${S.guests.length}</b>`);
+  setText('h-rating', `${icon('rating', '★')} <b>${Math.round(S.park.rating)}</b>`);
   const pb = $('h-pause');
   setText('h-pause', G.paused ? '▶' : '⏸');
   pb.setAttribute('aria-pressed', String(G.paused)); pb.setAttribute('aria-label', G.paused ? 'Paused. Press to play' : 'Pause');
@@ -61,6 +61,10 @@ export function measureBars() {
 }
 
 // ---- dock ----------------------------------------------------------------------------------
+// painted icons (art-src/icons → assets/icon-*.webp via art-pack); only names listed here are ever requested
+const ICON_SET = new Set(['inspect', 'paths', 'rides', 'coasters', 'water', 'shops', 'scenery', 'terrain', 'demolish', 'staff', 'park', 'sun', 'cloud', 'rain', 'storm', 'cash', 'guests', 'rating']);
+export const icon = (name, fb) => (ICON_SET.has(name) ? `<img class="pi" src="assets/icon-${name}.webp" alt="" draggable="false">` : fb);
+const TOOL_ICON = { inspect: 'inspect', path: 'paths', rides: 'rides', coasters: 'coasters', water: 'water', shops: 'shops', scenery: 'scenery', terrain: 'terrain', demolish: 'demolish', staff: 'staff', park: 'park' };
 const TOOLS = [
   ['inspect', '🔍', 'Inspect'], ['path', '▦', 'Paths'], ['rides', '🎠', 'Rides'], ['coasters', '🎢', 'Coasters'], ['water', '🌊', 'Water'],
   ['shops', '🍴', 'Shops'], ['scenery', '🌲', 'Scenery'], ['terrain', '⛰', 'Terrain'], ['demolish', '✖', 'Demolish'], ['staff', '👷', 'Staff'], ['park', '📋', 'Park'],
@@ -71,7 +75,7 @@ export function renderDock() {
   el.hidden = false;
   const active = G.tool === 'place' || G.tool === 'station' || G.tool === 'blueprint' || G.tool === 'used' ? G.palette : G.tool;
   queueMicrotask(measureBars);
-  el.innerHTML = TOOLS.map(([id, ic, label]) => `<button data-act="tool" data-arg="${id}" aria-pressed="${active === id || (G.panel === id && ['staff', 'park'].includes(id))}" title="${label}"><span class="ic" aria-hidden="true">${ic}</span>${label}</button>`).join('');
+  el.innerHTML = TOOLS.map(([id, ic, label]) => `<button data-act="tool" data-arg="${id}" aria-pressed="${active === id || (G.panel === id && ['staff', 'park'].includes(id))}" title="${label}"><span class="ic" aria-hidden="true">${icon(TOOL_ICON[id], ic)}</span>${label}</button>`).join('');
 }
 
 // ---- panel ---------------------------------------------------------------------------------
@@ -90,7 +94,7 @@ function itemBtn(type, pressed, extraMeta = '') {
   const sw = (d.color || '#9C7A55');
   const icon = k === 'ride' ? '🎠' : k === 'stall' ? (STALLS[type].need === 'restroom' ? '🚻' : STALLS[type].need === 'rest' ? '🪑' : '🛒') : k === 'track' ? '🎢' : k === 'special' ? '🎵' : '🌲';
   return `<button class="item" data-act="pick" data-arg="${type}" aria-pressed="${pressed}" ${ok ? '' : 'disabled'} aria-label="${esc(d.name)}, ${money(cost)}${ok ? '' : ', needs research'}">
-<span class="sw" style="background:${sw}" aria-hidden="true">${icon}</span>
+${(() => { const th = G.hooks.thumb && G.hooks.thumb(type); return th ? `<span class="sw th" aria-hidden="true"><img src="${th}" alt=""></span>` : `<span class="sw" style="background:${sw}" aria-hidden="true">${icon}</span>`; })()}
 <span><span class="nm">${esc(d.name)}</span><br><span class="meta tags">${ok ? meta : '<span class="tag">needs research</span>'}${extraMeta}</span></span>
 <span class="cost">${money(cost)}</span></button>`;
 }
@@ -132,7 +136,7 @@ const PANELS = {
   track: (S) => trackPanel(S),
   obj: (S) => objPanel(S),
   guest: (S) => guestPanel(S),
-  park: (S) => shell('Park', `<div class="items">${[['finances', '💵', 'Finances and prices'], ['guests', '👥', 'Guests and feedback'], ['rating', '★', 'Park rating'], ['goals', '🎯', S.scenario.mode === 'campaign' ? 'Scenario goals' : 'Sandbox'], ['staff', '👷', 'Staff'], ['research', '🔬', 'Research'], ['marketing', '📣', 'Marketing'], ['concerts', '🎵', 'Concerts'], ...(S.park.market && S.park.market.length ? [['market', '🏷', 'Used-ride market']] : []), ['saves', '💾', 'Save and load']].map(([p, ic, l]) => `<button class="item" data-act="panel" data-arg="${p}"><span class="sw" aria-hidden="true">${ic}</span><span class="nm">${l}</span><span></span></button>`).join('')}</div>
+  park: (S) => shell('Park', `<p class="muted"><b>${esc(S.park.name)}</b></p><div class="items">${[['finances', '💵', 'Finances and prices'], ['guests', '👥', 'Guests and feedback'], ['rating', '★', 'Park rating'], ['goals', '🎯', S.scenario.mode === 'campaign' ? 'Scenario goals' : 'Sandbox'], ['staff', '👷', 'Staff'], ['research', '🔬', 'Research'], ['marketing', '📣', 'Marketing'], ['concerts', '🎵', 'Concerts'], ...(S.park.market && S.park.market.length ? [['market', '🏷', 'Used-ride market']] : []), ['saves', '💾', 'Save and load']].map(([p, ic, l]) => `<button class="item" data-act="panel" data-arg="${p}"><span class="sw" aria-hidden="true">${ic}</span><span class="nm">${l}</span><span></span></button>`).join('')}</div>
 <div class="row"><button class="btn alt" data-act="screen" data-arg="help">How to play</button><button class="btn alt" data-act="screen" data-arg="settings">Settings</button><button class="btn alt" data-act="screen" data-arg="history">History album</button></div>
 <div class="row"><button class="btn" data-act="toTitle">Save and quit to title</button></div>`),
   finances: (S) => financePanel(S),
@@ -336,6 +340,7 @@ export function screenHTML(name) {
 <div class="row"><button class="btn" data-act="set" data-arg="reduced" aria-pressed="${!!reducedOn()}">Reduced motion: ${reducedOn() ? 'on' : 'off'}${s.reduced == null ? ' (system)' : ''}</button></div>
 <div class="row" role="group" aria-label="Text size"><span>Text size</span>${[1, 1.25, 1.5].map((v) => `<button class="btn small" data-act="text" data-arg="${v}" aria-pressed="${s.text === v}">${Math.round(v * 100)}%</button>`).join('')}</div>
 <div class="row"><button class="btn" data-act="set" data-arg="grid" aria-pressed="${s.grid}">Tile grid: ${s.grid ? 'on' : 'off'}</button></div>
+<div class="row"><button class="btn" data-act="gfx" aria-pressed="${s.gfx !== '2d'}">3D view: ${s.gfx !== '2d' ? 'on' : 'off (2D map)'}</button><button class="btn" data-act="quality">Graphics: ${s.quality || 'auto'}</button></div>
 ${G.storageOk ? '' : '<p class="no">Storage is blocked: settings and saves last only for this visit.</p>'}
 <div class="row back"><button class="btn" data-act="back">Back</button></div></div></div>`;
     }
@@ -375,7 +380,8 @@ const BUILD_HINT = {
   place: 'Tap or click a spot beside a path.', station: 'Place the 3-cell station beside a path.', blueprint: 'Place the blueprint station beside a path.',
   used: 'Place it beside a path.', path: 'Drag from a path to lay new path.', terrain: 'Tap tiles to raise or lower them.', demolish: 'Tap anything to remove it.',
 };
-export function renderTip() {
+export function renderTip() { renderTip0(); const el = $('tip'); document.documentElement.style.setProperty('--tip-h', el.hidden ? '0px' : el.offsetHeight + 8 + 'px'); }
+function renderTip0() {
   const el = $('tip'), S = G.S;
   // while building, the tip area becomes a small action bar (rotate and cancel work without a keyboard)
   if (G.scene === 'park' && S && BUILD_HINT[G.tool] && !(S.tutorial && TUTORIAL[S.tutorial.step])) {

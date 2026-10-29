@@ -56,6 +56,11 @@ The sim modules never touch the DOM, so Node runs them unchanged.
 
 `window.__TEST__` only disables the title attract camera drift; rules and rendering are unchanged.
 
+Visual campaign additions: `getState().gfx` = `{mode: '3d'|'2d', want, loading, failed, quality, gpu, soft, draws, tris,
+frameMs, trees, guests3d, objects3d}`; `act('pickAt', sx, sy)` → the tile the current renderer picks at a screen point;
+`isIdle()` is false while the 3D view loads and while a paused 3D frame is queued. `?gfx=2d` forces the Canvas renderer;
+`?debug` exposes `window.__R3` for inspection. See `VISUAL-PLAN.md` and `VISUAL-REPORT.md`.
+
 ## 4. Test matrix
 Screenshot names are `<file>-<nn>-<what>` in `screenshots/<milestone>/<viewport>/`; both viewports unless
 noted.
@@ -136,3 +141,15 @@ noted.
 | 24 | final | 2×2 scenery (Steam Fountain) left its footprint undrawn once ground caching skipped object footprints | Big scenery draws its own base like rides |
 | 25 | final | Phone dock labels ran together at 150% text ("TerrainDemolish") | Dock labels capped at 12 px and clipped |
 | 26 | final | Autosave only ran at the winter break | Autosave at every month end (saves test checks the slot) |
+| 27 | visual m1 | Tree instance colours were multiplied twice (three's instance colour chunk plus ours): a shader compile error | One colour assignment per region in the tree shader |
+| 28 | visual m1 | The live-region test read the announcement before its 30 ms timer under software GL | The test waits for the text (up to 4 s) |
+| 29 | visual m1 | The perf test's ≥ 55 fps cannot hold for WebGL on SwiftShader (2–4 fps) | 3D test checks script cost per frame and a floor on software GL; GPU fps from `tools/shots3d.mjs --fps`; the 2D fallback keeps ≥ 55 fps |
+| 30 | visual m2 | Selected guest hidden behind tall rides | Selected guest drawn again last, without a depth test, as a yellow silhouette (a transparent material did not draw at all; opaque with `renderOrder` 999 does) |
+| 31 | visual m2 | Coaster cars upside down: side × tangent gave a downward up vector | Car frame from the track's up vector; side = up × forward |
+| 32 | visual m2 | Slide tubes torn at bends (separate prism segments) | One parallel-transport sweep per slide (`Geo.sweep`) |
+| 33 | visual m3 | `title` test: hooks ready in 4.6 s because three.js was appended before the page's load event | 3D boot waits for `load` |
+| 34 | visual m3 | Checkerboard lawns: per-tile leaf-litter tint | Corner colours averaged across natural tiles |
+| 35 | visual m3 | Mobile HUD 185–220 px and 3 rows in October | Fixed two-row mobile HUD, short month, no wrapping chips |
+| 36 | visual m3 | A breakdown rebuilt every object mesh (≈ 50 ms hitch) | Broken state left out of the object signature (the pin shows it) |
+| 37 | visual m4 | Name boards mirrored when seen from behind | Two single-sided faces back to back |
+

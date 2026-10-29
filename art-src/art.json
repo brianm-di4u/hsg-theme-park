@@ -1,0 +1,167 @@
+{
+ "quality": 0.86,
+ "items": [
+  {
+   "name": "icon-inspect",
+   "src": "icons/icon-inspect.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  },
+  {
+   "name": "icon-paths",
+   "src": "icons/icon-paths.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  },
+  {
+   "name": "icon-rides",
+   "src": "icons/icon-rides.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  },
+  {
+   "name": "icon-coasters",
+   "src": "icons/icon-coasters.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  },
+  {
+   "name": "icon-water",
+   "src": "icons/icon-water.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  },
+  {
+   "name": "icon-shops",
+   "src": "icons/icon-shops.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  },
+  {
+   "name": "icon-scenery",
+   "src": "icons/icon-scenery.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  },
+  {
+   "name": "icon-terrain",
+   "src": "icons/icon-terrain.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  },
+  {
+   "name": "icon-demolish",
+   "src": "icons/icon-demolish.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  },
+  {
+   "name": "icon-staff",
+   "src": "icons/icon-staff.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  },
+  {
+   "name": "icon-park",
+   "src": "icons/icon-park.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  },
+  {
+   "name": "icon-sun",
+   "src": "icons/icon-sun.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  },
+  {
+   "name": "icon-cloud",
+   "src": "icons/icon-cloud.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  },
+  {
+   "name": "icon-rain",
+   "src": "icons/icon-rain.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  },
+  {
+   "name": "icon-storm",
+   "src": "icons/icon-storm.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  },
+  {
+   "name": "icon-cash",
+   "src": "icons/icon-cash.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  },
+  {
+   "name": "icon-guests",
+   "src": "icons/icon-guests.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  },
+  {
+   "name": "icon-rating",
+   "src": "icons/icon-rating.png",
+   "w": 96,
+   "h": 96,
+   "fit": "contain",
+   "keyWhite": 10,
+   "trim": true
+  }
+ ]
+}
