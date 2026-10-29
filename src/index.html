@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Spa City Thrills</title>
+<meta name="description" content="An original theme-park builder set in the Ouachita hills of Hot Springs, Arkansas. Part of the open-source Hot Springs Games collection (MIT).">
+<link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="cv" role="img" aria-label="Park map. Use the tool buttons, the arrow keys and Enter to build; every event is announced in text."></canvas>
+  <header id="hud" hidden></header>
+  <nav id="dock" aria-label="Tools" hidden></nav>
+  <aside id="panel" aria-label="Details" hidden></aside>
+  <div id="toasts" aria-hidden="true"></div>
+  <div id="tip" hidden></div>
+</div>
+<main id="screen"></main>
+<div id="live" class="sr-only" aria-live="polite"></div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
