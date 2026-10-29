@@ -23,9 +23,8 @@ Design docs: `PRD.md`, `MECHANICS.md`, `DEV-PLAN.md`, `REPORT.md`, `VISUAL-PLAN.
 
 ## Vendored from the collection
 
-This repo was split out of the [hot-springs-games](https://github.com/brianm-di4u/hot-springs-games) monorepo,
-which keeps the full research corpus, `LESSONS.md` and the session brief. Copies kept here so the game builds and
-tests on its own:
+This repo was split out of the original Hot Springs Games monorepo (kept offline), which holds the full research
+corpus, `LESSONS.md` and the session brief. Copies kept here so the game builds and tests on its own:
 
 - `shared/test-harness/`: the Playwright screenshot test runner (`run.mjs`, `art-pack.mjs`, `sheets.mjs`, `gallery.mjs`).
 - `shared/tools/inline.mjs`: bundles `src/` into the single-file `index.html`.
