@@ -1,8 +1,8 @@
 // Bakes art-src/dem/dem_site.tif + nlcd_site.png (see fetch.mjs) into assets/dem.js, the real terrain
 // around the fictional park: a 2.88 km square of the Ouachita ridges north-west of Hot Springs, Arkansas,
 // at 10 m per sample, true north up (x east, y south), plus NLCD 2021 land cover per sample.
-//   node games/theme-park/tools/geo/fetch.mjs site -93.13915,34.52833,-93.10765,34.55427 288 288
-//   node games/theme-park/tools/geo/bake.mjs [--preview]
+//   node tools/geo/fetch.mjs site -93.13915,34.52833,-93.10765,34.55427 288 288
+//   node tools/geo/bake.mjs [--preview]
 import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 import { readTiff, readPng, writePng } from './geo-lib.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));

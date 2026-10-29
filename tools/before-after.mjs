@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Before/after sheets: pairs same-named screenshots from two milestones side by side.
 // Adapted from games/block-puzzle/tools/before-after.mjs.
-//   node games/theme-park/tools/before-after.mjs [before=visual-before] [after=visual-final]
+//   node tools/before-after.mjs [before=visual-before] [after=visual-final]
 // Writes screenshots/<after>/before-after/<viewport>-NN.png (review aid; screenshots are git-ignored).
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
@@ -9,7 +9,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const require = createRequire(path.resolve(HERE, '../../../shared/test-harness/package.json'));
+const require = createRequire(path.resolve(HERE, '../shared/test-harness/package.json'));
 const { chromium } = require('playwright');
 const [before = 'visual-before', after = 'visual-final'] = process.argv.slice(2);
 const SHOTS = ['01-title', '13-park-start', '01-crowd', '01-500-guests', '01-building', '03-done', '04-flume', '02-storm', '06-night', '05-fall', '04-spring', '05-concert', '04-guest', '05-ride-window', '06-broken', '07-litter'];

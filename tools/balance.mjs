@@ -2,8 +2,8 @@
 // Runs the real sim headless in Node. Scripted players build each campaign scenario with the same
 // actions the UI uses; the report covers guests, satisfaction, profit, whether and when each scenario
 // is won, and the cost of guests and pathfinding per tick. Exit 1 if a metric leaves its band.
-//   node games/theme-park/tools/balance.mjs            all scenarios + the stress park
-//   node games/theme-park/tools/balance.mjs 3 --v      one scenario, monthly detail
+//   node tools/balance.mjs            all scenarios + the stress park
+//   node tools/balance.mjs 3 --v      one scenario, monthly detail
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 

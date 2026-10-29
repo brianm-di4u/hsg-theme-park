@@ -1,0 +1,12 @@
+{
+  "name": "hsg-theme-park",
+  "private": true,
+  "type": "module",
+  "description": "Spa City Thrills: Theme-park builder / management sim",
+  "license": "MIT",
+  "scripts": {
+    "setup": "cd shared/test-harness && npm install && npx playwright install chromium",
+    "build": "node shared/tools/inline.mjs .",
+    "test": "node shared/test-harness/run.mjs ."
+  }
+}

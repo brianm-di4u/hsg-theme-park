@@ -1,5 +1,5 @@
 // Downloads the public-domain elevation and land-cover rasters the 3D backdrop is baked from, into
-// art-src/dem/ (git-ignored; delete after baking).   node games/theme-park/tools/geo/fetch.mjs <name> <w,s,e,n> <W> <H>
+// art-src/dem/ (git-ignored; delete after baking).   node tools/geo/fetch.mjs <name> <w,s,e,n> <W> <H>
 // Sources (U.S. federal works, public domain):
 //   USGS 3D Elevation Program (3DEP) seamless DEM, exportImage as uncompressed float32 TIFF
 //     https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer

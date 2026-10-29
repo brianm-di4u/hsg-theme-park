@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Opens the game from file:// (no server) at both viewports and checks that three.js, the models, the terrain
 // backdrop and the painted icons load, a park builds and runs in 3D, and nothing errors or reaches the network.
-//   node games/theme-park/tools/check-file-url.mjs [--gpu]
+//   node tools/check-file-url.mjs [--gpu]
 // The test harness cannot do this itself: it blocks every URL that is not its own server.
 // (Pattern from games/block-puzzle/tools/check-file-url.mjs.)
 import { createRequire } from 'node:module';
@@ -9,7 +9,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const require = createRequire(path.resolve(HERE, '../../../shared/test-harness/package.json'));
+const require = createRequire(path.resolve(HERE, '../shared/test-harness/package.json'));
 const { chromium } = require('playwright');
 const url = pathToFileURL(path.resolve(HERE, '..', 'index.html')).href;
 const gpu = process.argv.includes('--gpu') ? ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11', '--use-gl=angle'] : [];

@@ -1,2 +1,25 @@
+node_modules/
+shared/test-harness/.tmp/
+shared/test-harness/smoke/screenshots/
+/screenshots/
+/reference-samples/
+*.log
+.DS_Store
+Thumbs.db
+art-src/**/*.png
+
+# User reference photos (third-party product images; style reference only, not for the repo)
+/Sample Images/
+# Blender backups, renders and caches (keep .blend sources and exported assets)
+art-src/**/*.blend1
+art-src/**/renders/
+# Benchmark screenshots of other games (review only, never shipped)
+/benchmarks/
+# Downloaded elevation caches (re-fetched by game tools)
+/art-src/dem/
+# Raw downloaded map data (USGS, Census, NHD, OSM; refetched by game tools)
+/art-src/geo/raw/
+
+# Game-specific
 # raw generated icon PNGs (packed into assets/icon-*.webp by art-pack)
 art-src/icons/*.png

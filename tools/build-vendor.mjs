@@ -1,8 +1,8 @@
 // Rebuilds vendor/three.min.js, a classic-script (IIFE) bundle that sets window.THREE, so the game can
 // load three.js with a plain <script src> after first paint (works from file://, where ES-module imports fail).
 //
-//   cd games/theme-park/tools/dev && npm install   (once: three@0.186.1 and esbuild, build-time only)
-//   node games/theme-park/tools/build-vendor.mjs
+//   cd tools/dev && npm install   (once: three@0.186.1 and esbuild, build-time only)
+//   node tools/build-vendor.mjs
 //
 // Source: npm `three@0.186.1` (MIT, LICENSE copied to vendor/three-LICENSE). Recorded in SAMPLES.md.
 import path from 'node:path';

@@ -4,17 +4,17 @@
 //     and cites the same source; each research ref's quote appears verbatim in the named research file;
 //  2. the climate normals the weather uses (src/js/catalog.js CLIMATE) match the research table;
 //  3. claims written into the Help "About" text (src/js/ui.js) are backed by confirmed bank items.
-//   node games/theme-park/tools/check-facts.mjs
+//   node tools/check-facts.mjs
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const game = path.resolve(here, '..');
-const repo = path.resolve(game, '../..');
+const repo = path.resolve(game);
 const { FACTS } = await import(pathToFileURL(path.join(game, 'src/js/facts.js')).href);
 const { CLIMATE } = await import(pathToFileURL(path.join(game, 'src/js/catalog.js')).href);
-const bank = JSON.parse(fs.readFileSync(path.join(repo, 'games/trivia/data/questions.json'), 'utf8')).questions;
+const bank = JSON.parse(fs.readFileSync(path.join(repo, 'shared/data/trivia-questions.json'), 'utf8')).questions;
 const research = (f) => fs.readFileSync(path.join(repo, 'research', f), 'utf8');
 
 let bad = 0, n = 0;

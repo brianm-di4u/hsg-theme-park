@@ -1,8 +1,10 @@
 # Spa City Thrills: report
 
 An original theme-park builder and management sim set in the wooded Ouachita hills of Hot Springs,
-Arkansas. Single self-contained `index.html` (~280 KB), built from `src/` with
-`node shared/tools/inline.mjs games/theme-park`. Nothing is committed; the coordinator reviews and commits.
+Arkansas. `index.html` (~465 KB) is built from `src/` with `node shared/tools/inline.mjs games/theme-park`. After the
+visual campaign it also loads `vendor/three.min.js` and `assets/` (1.98 MB in all) for the 3D view, after first paint.
+See `VISUAL-REPORT.md`: three.js 3D park, Blender models, real USGS terrain around the map, and the original Canvas
+renderer kept as the fallback. Visual-final run: **86/86** at both viewports. Nothing is committed; the coordinator reviews and commits.
 The game is not branded as, affiliated with or a depiction of the real park; real history appears only
 on sourced history cards.
 
@@ -189,6 +191,10 @@ that exposed sky when the camera moved).
   a CDP tap on a button. Acting on `pointerup` for touch (and skipping the following click) fixed it.
 
 ## Files
+Visual campaign: `VISUAL-PLAN.md`, `VISUAL-REPORT.md`, `research/terrain.md`, `src/js/gfx/` (3D view), `assets/`,
+`vendor/` (three.js r186.1, MIT), `art-src/blender/` (model generator), `tools/geo/`, `tools/shots3d.mjs`,
+`tools/check-file-url.mjs`, `tools/before-after.mjs`, `tools/build-vendor.mjs`, `tests/gfx3d.test.mjs`.
+
 `PRD.md`, `MECHANICS.md`, `DEV-PLAN.md` (milestones, hook spec, test matrix, defect log), `SAMPLES.md`,
 `research/town-content.md`, `tools/balance.mjs`, `tools/check-facts.mjs`, `tests/*.test.mjs` (11 files +
 helpers), `src/` (21 modules + CSS).

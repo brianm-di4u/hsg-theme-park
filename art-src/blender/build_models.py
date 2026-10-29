@@ -1,6 +1,6 @@
 # Ouachita theme park: low-poly stylized models, built procedurally in Blender and exported for three.js.
 #
-#   "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" -b --factory-startup --python games/theme-park/art-src/blender/build_models.py
+#   "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" -b --factory-startup --python art-src/blender/build_models.py
 #
 # Every model is built from scratch (bmesh primitives, lofts, lathes, plane cuts, plus Remesh / Displace /
 # Decimate / Boolean modifiers that are applied), painted per face (region + baked sRGB base colour), saved to

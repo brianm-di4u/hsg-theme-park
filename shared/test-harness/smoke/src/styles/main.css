@@ -1,0 +1,7 @@
+:root { --bg: #f4efe6; --fg: #1f2a2e; --accent: #2a8c8c; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.4 system-ui, sans-serif; }
+header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; }
+h1 { margin: 0; font-size: 20px; }
+button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 0; background: var(--accent); color: #fff; }
+canvas { display: block; width: 100%; height: calc(100vh - 64px); }

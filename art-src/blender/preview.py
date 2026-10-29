@@ -1,6 +1,6 @@
 # Renders lineups of every model in models.blend into art-src/blender/renders/ (git-ignored) for review.
 #
-#   "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" -b games/theme-park/art-src/blender/models.blend --python games/theme-park/art-src/blender/preview.py [-- group ...]
+#   "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" -b art-src/blender/models.blend --python art-src/blender/preview.py [-- group ...]
 #
 # Groups: trees, people, rides, scenery, park (mixed scene at game scale). Views per group: front (low perspective),
 # iso (30 deg elevation, orthographic, like the game camera) and back (iso from behind).

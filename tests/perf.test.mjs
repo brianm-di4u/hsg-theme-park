@@ -1,11 +1,14 @@
 // 500 guests at 60 fps, file size, load time, no requests or console errors (the harness checks those).
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const GAME = fileURLToPath(new URL('..', import.meta.url));
 
 // The 3D view on the harness's software GL (SwiftShader) runs a few frames a second whatever we do, so there the
 // test checks the script cost per frame instead; real GPU fps come from tools/shots3d.mjs --fps (REPORT/VISUAL-REPORT).
 // The 2D fallback keeps the original ≥ 55 fps budget.
-const dirSize = (d) => { const p = path.resolve('games/theme-park', d); return fs.existsSync(p) ? fs.readdirSync(p).filter((f) => !f.includes('LICENSE') && !f.endsWith('.json')).reduce((a, f) => a + fs.statSync(path.join(p, f)).size, 0) : 0; };
+const dirSize = (d) => { const p = path.join(GAME, d); return fs.existsSync(p) ? fs.readdirSync(p).filter((f) => !f.includes('LICENSE') && !f.endsWith('.json')).reduce((a, f) => a + fs.statSync(path.join(p, f)).size, 0) : 0; };
 async function busyPark(t) {
       await t.seed(11);
       await t.game('newGame', { mode: 'sandbox', cash: 'unlimited', hills: 'rolling', tutorial: false });
@@ -25,7 +28,7 @@ export const tests = [
   {
     name: 'performance (3D view): 500 guests, frame cost, size, load',
     async run(t) {
-      const size = fs.statSync(path.resolve('games/theme-park/index.html')).size;
+      const size = fs.statSync(path.join(GAME, 'index.html')).size;
       t.expect(size < 2 * 1024 * 1024, `index.html ${(size / 1024).toFixed(0)} KB < 2 MB`);
       const total = size + dirSize('vendor') + dirSize('assets');
       t.log(`download: index.html ${(size / 1024).toFixed(0)} KB, total with three.js and assets ${(total / 1048576).toFixed(2)} MB`);

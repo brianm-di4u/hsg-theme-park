@@ -1,5 +1,5 @@
 // Review shots and fps of the 3D view with a GPU-backed headless Chromium (the test harness runs SwiftShader).
-//   node games/theme-park/tools/shots3d.mjs [out-dir] [--fps] [--only title,crowd] [--sw] [--vp desktop|mobile] [--2d]
+//   node tools/shots3d.mjs [out-dir] [--fps] [--only title,crowd] [--sw] [--vp desktop|mobile] [--2d]
 // Serves the repo root on a local port, stages scenes through window.__game and writes PNGs
 // (desktop 1280×800, mobile 390×844 @2x). --sw uses the default software GL instead of the GPU.
 import http from 'node:http';
@@ -9,12 +9,12 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const require = createRequire(path.join(here, '../../../shared/test-harness/package.json'));
+const require = createRequire(path.join(here, '../shared/test-harness/package.json'));
 const { chromium } = require('playwright');
 const args = process.argv.slice(2);
 function opt0(k) { return args.includes(k) ? args[args.indexOf(k) + 1] : null; }
-const root = opt0('--root') ? path.resolve(opt0('--root')) : path.resolve(here, '../../..');
-const pagePath = opt0('--page') || 'games/theme-park/index.html';
+const root = opt0('--root') ? path.resolve(opt0('--root')) : path.resolve(here, '..');
+const pagePath = opt0('--page') || 'index.html';
 const opt = (k) => (args.includes(k) ? args[args.indexOf(k) + 1] : null);
 const out = path.resolve(args.find((a, i) => !a.startsWith('--') && !(args[i - 1] || '').startsWith('--')) || path.join(here, '../screenshots/scratch3d'));
 const only = opt('--only') ? opt('--only').split(',') : null;
