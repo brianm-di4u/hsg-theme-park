@@ -28,7 +28,8 @@ const outAt = args.indexOf('--out');
 const outFile = outAt >= 0 ? path.resolve(args[outAt + 1]) : path.join(gameDir, 'index.html');
 
 const isRemote = (u) => /^(https?:)?\/\//i.test(u);
-const read = (f) => fs.readFileSync(f, 'utf8');
+// Normalise to LF: in a CRLF source the import rewrite below starts its match between CR and LF and leaves bare CRs.
+const read = (f) => fs.readFileSync(f, 'utf8').replace(/\r\n?/g, '\n');
 // Keep `</script>` and `</style>` inside inlined code from closing the tag early.
 const safeScript = (s) => s.replace(/<\/script/gi, '<\\/script');
 const safeStyle = (s) => s.replace(/<\/style/gi, '<\\/style');

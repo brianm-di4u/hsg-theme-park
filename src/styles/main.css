@@ -7,7 +7,7 @@
   --font-deco: "Century Gothic", Futura, "Avenir Next", "Trebuchet MS", "Gill Sans", sans-serif;
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --ts: 1;
-  --hud-h: 52px; --dock-h: 66px; --panel-w: 340px;
+  --hud-h: 52px; --dock-h: 70px; --panel-w: 340px;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -35,9 +35,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* ---- dock ---- */
 #dock { position: absolute; left: 0; right: 0; bottom: 0; height: var(--dock-h); display: flex; gap: 4px; padding: 6px 8px; overflow-x: auto; overflow-y: hidden;
   background: var(--cream); border-top: 3px solid var(--coral); z-index: 3; scrollbar-width: thin; }
-#dock button { flex: 0 0 auto; min-width: 64px; min-height: 52px; border: 2px solid transparent; border-radius: 10px; background: #F0E6CC; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 2px 6px; font-size: .78em; font-weight: 700; color: var(--ink); }
+#dock button { flex: 0 0 auto; min-width: 84px; min-height: 56px; border: 2px solid transparent; border-radius: 10px; background: #F0E6CC; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 2px 8px; font-size: .88em; font-weight: 700; color: var(--ink); }
+/* centred when it fits; auto margins (not justify-content) keep the first tools reachable when the dock scrolls */
+#dock > :first-child { margin-left: auto; }
+#dock > :last-child { margin-right: auto; }
 #dock button .ic { font-size: 1.35em; line-height: 1; }
-#dock button .ic img.pi { width: 30px; height: 30px; display: block; }
+#dock button .ic img.pi { width: 32px; height: 32px; display: block; }
 .mo3 { display: none; }
 #hud .stat img.pi { width: 20px; height: 20px; vertical-align: -4px; }
 #dock button[aria-pressed="true"] { background: var(--turq); border-color: var(--turq-d); }
@@ -154,8 +157,13 @@ body.g3 .scr.title > p { background: rgba(20,18,31,.55); border-radius: 10px; pa
   #hud .stat { padding: 2px 6px; }
   .speed button, .hudbtn { min-height: 44px; min-width: 44px; }
   #dock { display: grid; grid-template-columns: repeat(6, 1fr); height: auto; overflow: visible; padding: 4px; gap: 3px; }
-  #dock button { min-width: 0; min-height: 48px; font-size: clamp(10px, .72em, 12px); padding: 2px; overflow: hidden; }
-  #panel { left: 6px; right: 6px; width: auto; top: auto; bottom: calc(var(--dock-h) + 6px); max-height: 52%; }
+  #dock button { min-width: 0; min-height: 48px; font-size: clamp(12px, .8em, 13px); padding: 2px; overflow: hidden; }
+  #dock > :first-child, #dock > :last-child { margin: 0; }
+  #dock button .ic img.pi { width: 30px; height: 30px; }
+  /* bottom sheet: the scroll area stops short of the rounded corners and its last row clears them */
+  #panel { left: 6px; right: 6px; width: auto; top: auto; bottom: calc(var(--dock-h) + 6px); max-height: 58%; padding-bottom: 8px; }
+  #panel .body { padding-bottom: calc(22px + env(safe-area-inset-bottom)); }
+  #panel .keys { display: none; }
   #tip { bottom: calc(var(--dock-h) + 8px); }
   #panel:not([hidden]) ~ #tip { display: none; }
 }

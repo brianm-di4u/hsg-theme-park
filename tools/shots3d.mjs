@@ -57,6 +57,9 @@ const SCENES = {
   async train(p) { await busy(300)(p); await p.evaluate(() => { const G = window.__game; const S = G.getState(true); const t = S.objects.find((o) => o.type === 'steel'); const c = t.cells[Math.floor(t.cells.length * 0.4)]; G.act('camera', c.x, c.y, 2); for (let i = 0; i < 400 && G.getState().objects.find((o) => o.id === t.id).riders === 0; i++) G.step(5); G.step(30); }); },
   async palette(p) { await busy(300)(p); await p.evaluate(() => { const G = window.__game; G.act('tool', 'rides'); }); },
   async guest(p) { await busy(400)(p); await p.evaluate(() => { const G = window.__game; const s = G.getState(); const g = s.sampleGuests.find((x) => x.st !== 'ride' && x.st !== 'queue') || s.sampleGuests[0]; G.act('select', 'guest', g.id); G.act('follow', true); G.step(3); }); },
+  // tree cutaway: a carousel in the woods by the gate, selected (cutsel) and under a close zoom without selection (cutzoom)
+  async cutsel(p) { await p.evaluate(() => { const G = window.__game; G.seed(7); G.newGame({ scenario: 1, tutorial: false }); G.act('autoPlace', 'carousel'); const o = G.getState(true).objects.find((x) => x.type === 'carousel'); G.act('select', 'obj', o.id); G.act('camera', o.x + 1, o.y + 1, 1.9); }); },
+  async cutzoom(p) { await p.evaluate(() => { const G = window.__game; G.seed(7); G.newGame({ scenario: 1, tutorial: false }); G.act('autoPlace', 'carousel'); const o = G.getState(true).objects.find((x) => x.type === 'carousel'); G.act('camera', o.x + 1, o.y + 1, 2.2); }); },
   async coaster(p) { await busy(300)(p); await p.evaluate(() => { const G = window.__game; const s = G.getState(); const t = s.objects.find((o) => o.type === 'steel'); if (t) G.act('camera', t.x, t.y, 1.3); }); },
 };
 const VPS = { desktop: { viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 }, mobile: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true } };

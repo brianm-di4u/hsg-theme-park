@@ -2,7 +2,7 @@
 // Region 1/2 of each model is recoloured by species and month (spring redbud and dogwood bloom, October colour),
 // vertices sway with the wind by their `sway` weight. One draw call per model variant.
 import { hash2 } from '../rng.js';
-import { SCENERY } from '../catalog.js';
+import { SCENERY, RIDES } from '../catalog.js';
 import { LH, lin } from './geo.js';
 import { backdropGround, aspectPine } from './terrain3d.js';
 import { U } from './materials3d.js';
@@ -63,13 +63,24 @@ function fallbackGeometry(THREE, kind) {
   return g;
 }
 
-function treeMaterial(THREE, kind) {
+// Cutaway: trees whose canopy stands between the camera and a focus point (xyz, radius in w) dither out to their
+// stumps, so the selected ride or guest, or the ride under a close zoom, stays visible. Shadows are kept.
+const CUT_VS = `uniform vec4 uCutA; uniform vec4 uCutB; uniform vec3 uCam; varying float vCut; varying float vLy;
+float cutAt(vec4 F, vec3 p) {
+  if (F.w <= 0.0) return 0.0;
+  vec3 d = uCam - F.xyz; float t = dot(p - F.xyz, d) / dot(d, d);
+  if (t < 0.0) return 0.0;
+  return 1.0 - smoothstep(F.w * 0.97, F.w, distance(p, F.xyz + d * t));
+}
+`;
+function treeMaterial(THREE, kind, cut) {
   const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0, flatShading: false });
   const uLeaf = { value: new THREE.Color() }, uAcc = { value: new THREE.Color() }, uRef = { value: new THREE.Vector2(0.05, 0.05) };
   m.userData = { uLeaf, uAcc, uRef };
   m.onBeforeCompile = (sh) => {
     sh.uniforms.uLeaf = uLeaf; sh.uniforms.uAcc = uAcc; sh.uniforms.uRef = uRef; sh.uniforms.uTime = U.uTime; sh.uniforms.uWind = U.uWind;
-    sh.vertexShader = 'attribute float reg; attribute float sway; uniform vec3 uLeaf; uniform vec3 uAcc; uniform vec2 uRef; uniform float uTime; uniform float uWind;\n' + sh.vertexShader
+    Object.assign(sh.uniforms, cut);
+    sh.vertexShader = 'attribute float reg; attribute float sway; uniform vec3 uLeaf; uniform vec3 uAcc; uniform vec2 uRef; uniform float uTime; uniform float uWind;\n' + CUT_VS + sh.vertexShader
       .replace('#include <color_vertex>', `float lum = dot(color.rgb, vec3(0.3, 0.59, 0.11));
         // tint, keeping the model's baked light-to-dark gradient and per-face variation
         vColor.rgb = reg < 0.5 ? color.rgb : (reg < 1.5 ? uLeaf * clamp(lum / uRef.x, 0.55, 1.6) : uAcc * clamp(lum / uRef.y, 0.55, 1.6));
@@ -81,7 +92,13 @@ function treeMaterial(THREE, kind) {
         float ph = ip.x * 0.37 + ip.z * 0.23;
         float sw = sway * sway * uWind;
         transformed.x += sin(uTime * 1.3 + ph) * 0.06 * sw;
-        transformed.z += cos(uTime * 1.1 + ph * 1.3) * 0.05 * sw;`);
+        transformed.z += cos(uTime * 1.1 + ph * 1.3) * 0.05 * sw;
+        float isc = length(instanceMatrix[1].xyz);
+        vec3 c1 = ip + vec3(0.0, 1.5 * isc, 0.0), c2 = ip + vec3(0.0, 3.2 * isc, 0.0);
+        vCut = max(max(cutAt(uCutA, c1), cutAt(uCutA, c2)), max(cutAt(uCutB, c1), cutAt(uCutB, c2))); vLy = position.y;`);
+    // the stump mask is per fragment: a trunk is one long segment, so a per-vertex mask would smear up its length
+    sh.fragmentShader = 'varying float vCut; varying float vLy;\n' + sh.fragmentShader.replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+      if (vCut > 0.0 && vCut * 1.04 * smoothstep(0.25, 0.4, vLy) > fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))))) discard;`);
   };
   m.customProgramCacheKey = () => 'sct-tree' + kind;
   return m;
@@ -91,8 +108,43 @@ function occKind(S, id) { if (!S._ok || S._okv !== S.objects.length) { S._ok = n
 export class Trees {
   constructor(THREE, scene, mats, R3) {
     this.T = THREE; this.scene = scene; this.R3 = R3; this.meshes = []; this.count = 0; this.mats = {};
-    for (const k of [1, 2, 3, 4]) this.mats[k] = treeMaterial(THREE, k);
+    this.cutU = { uCutA: { value: new THREE.Vector4() }, uCutB: { value: new THREE.Vector4() }, uCam: { value: new THREE.Vector3() } };
+    this.cutR = [0, 0];
+    for (const k of [1, 2, 3, 4]) this.mats[k] = treeMaterial(THREE, k, this.cutU);
     this.rockMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0, flatShading: true });
+  }
+  // focus A: the selected ride or guest; focus B: the built object nearest the screen centre at close zoom.
+  // Returns true while a cut is open or closing (the paused view keeps drawing until it settles).
+  cut(S, view, camera, tgt, dt) {
+    const C = this.cutU, M = S.map, w = M.w, ease = view.reduced ? 1 : Math.min(1, dt / 120);
+    C.uCam.value.copy(camera.position);
+    const objAt = (o) => { const n = o.n || 1, big = RIDES[o.type] && RIDES[o.type].tall ? 0.6 : 0; return [o.x + n / 2, o.h * LH + 0.5 + big, o.y + n / 2, n * 0.62 + 1.4 + big]; };
+    let a = null, b = null;
+    const sel = view.sel;
+    if (sel && sel.kind === 'obj') { const o = S.objects.find((x) => x.id === sel.id); if (o && o.kind !== 'scenery') a = objAt(o); }
+    else if (sel && sel.kind === 'guest') {
+      const g = S.guests.find((x) => x.id === sel.id);
+      if (g && g.st === 'ride') { const o = S.objects.find((x) => x.riders && x.riders.includes(g.id)); if (o) a = objAt(o); }
+      else if (g && g.st !== 'gone') a = [g.x, g.z * LH + 0.5, g.y, 1.5];
+    }
+    const zk = Math.max(0, Math.min(1, (view.cam.z - 1.25) / 0.45));
+    if (zk > 0 && tgt && !view.cine) {
+      const tx = Math.floor(tgt[0]), ty = Math.floor(tgt[2]);
+      let best = 0, bd = 9;
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+        const X = tx + dx, Y = ty + dy; if (X < 0 || Y < 0 || X >= w || Y >= M.h) continue;
+        const id = M.occ[Y * w + X]; if (!id || occKind(S, id) === 'scenery') continue;
+        const d = dx * dx + dy * dy; if (d < bd) { bd = d; best = id; }
+      }
+      const o = best && S.objects.find((x) => x.id === best);
+      if (o && !(sel && sel.kind === 'obj' && sel.id === o.id)) { b = objAt(o); b[3] *= zk; }
+    }
+    const set = (u, f, i) => {
+      if (f) { this.cutR[i] += (f[3] - this.cutR[i]) * ease; if (Math.abs(f[3] - this.cutR[i]) < 0.02) this.cutR[i] = f[3]; u.value.set(f[0], f[1], f[2], this.cutR[i]); }
+      else { this.cutR[i] *= 1 - ease; if (this.cutR[i] < 0.05) this.cutR[i] = 0; u.value.w = this.cutR[i]; }
+      return f ? this.cutR[i] !== f[3] : this.cutR[i] > 0;
+    };
+    const moving = set(C.uCutA, a, 0); return set(C.uCutB, b, 1) || moving;
   }
   clear() { for (const m of this.meshes) { this.scene.remove(m); m.dispose(); } this.meshes = []; }
   rebuild(S, world) {

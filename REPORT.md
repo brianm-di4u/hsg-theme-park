@@ -1,7 +1,7 @@
 # Spa City Thrills: report
 
 An original theme-park builder and management sim set in the wooded Ouachita hills of Hot Springs,
-Arkansas. `index.html` (~465 KB) is built from `src/` with `node shared/tools/inline.mjs games/theme-park`. After the
+Arkansas. `index.html` (~465 KB) is built from `src/` with `npm run build` (`node shared/tools/inline.mjs .`). After the
 visual campaign it also loads `vendor/three.min.js` and `assets/` (1.98 MB in all) for the 3D view, after first paint.
 See `VISUAL-REPORT.md`: three.js 3D park, Blender models, real USGS terrain around the map, and the original Canvas
 renderer kept as the fallback. Visual-final run: **86/86** at both viewports. Nothing is committed; the coordinator reviews and commits.
@@ -100,7 +100,7 @@ on sourced history cards.
 | AC44 day/night | met | world › night (9 pm lights and neon), rain, storm flashes |
 
 ## Test results
-`node shared/test-harness/run.mjs games/theme-park --milestone final`: **75/77** at desktop (1280×800)
+`node shared/test-harness/run.mjs . --milestone final`: **75/77** at desktop (1280×800)
 and mobile (390×844), 97 screenshots. The two failures are the fps assertion only (28.6 desktop, 17.2
 mobile; the machine stayed at 86–99% CPU from other sessions' browser tests for the whole closing hour,
 including a 25-minute wait for it to drop below 55%); every functional test
@@ -111,7 +111,7 @@ large-text shots. Milestones m1–m5 were run and inspected along the way (26 de
 DEV-PLAN §5, including one found only on full-size inspection of the final shots: a reversed blit offset
 that exposed sky when the camera moved).
 
-## Balance (`node games/theme-park/tools/balance.mjs`)
+## Balance (`node tools/balance.mjs`)
 | # | Scenario | Scripted player | When | Stars | Seasons (guests / rating / operating profit) |
 |---|---|---|---|---|---|
 | 1 | 1978 Opening Summer | won | Sep 1978 | 2 | 4,000+ guests, rating 500+ |

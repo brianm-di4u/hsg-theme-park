@@ -174,7 +174,7 @@ ${o.complete ? '<p class="ok"><b>Loop closed.</b> Run the test to open it.</p>' 
 <div class="row"><button class="btn" data-act="lift" aria-pressed="${lift}">⛓ Lift chain ${lift ? 'on' : 'off'}</button></div>
 <div class="pad" role="group" aria-label="Direction">${[[-1, '↰ Left'], [0, '↑ Straight'], [1, 'Right ↱']].map(([t, l], k) => `<button class="btn alt" data-act="trackAdd" data-arg="${t}" ${prev[k].ok ? '' : 'disabled'} title="${prev[k].ok ? (prev[k].close ? 'Closes the loop' : money(prev[k].cost)) : esc(prev[k].reason)}">${l}${prev[k].ok && prev[k].close ? ' ✓' : ''}</button>`).join('')}</div>
 <p class="muted">${prev.filter((p) => !p.ok).map((p) => esc(p.reason)).filter((v, i, a) => a.indexOf(v) === i).join(' · ')}</p>
-<p class="muted">You can also click the highlighted cells on the map. Keys: ← ↑ → add, PgUp/PgDn slope, L lift, Backspace undo.</p>`}
+<p class="muted">You can also click the highlighted cells on the map.<span class="keys"> Keys: ← ↑ → add, PgUp/PgDn slope, L lift, Backspace undo.</span></p>`}
 ${stats}
 <div class="row"><button class="btn" data-act="trackUndo">↶ Undo</button>${o.complete ? '' : '<button class="btn alt" data-act="trackAuto">Auto-finish</button>'}<button class="btn alt" data-act="trackFinish" ${o.complete ? '' : 'disabled'}>Test and open</button><button class="btn warn" data-act="trackCancel">Cancel</button></div>`;
   return shell(T.name + ' builder', body);

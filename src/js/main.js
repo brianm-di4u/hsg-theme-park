@@ -519,6 +519,7 @@ function frame(t) {
       else G.follow = false;
     }
     if (G.testRun) { const p = (performance.now() - G.testRun.t0) / 2500; view.testRun = p < 1 ? { id: G.testRun.id, p } : null; if (p >= 1) G.testRun = null; G.dirty = true; }
+    if (view.g3 && R3.cutting) G.dirty = true; // a tree cutaway is still opening or closing
     if (view.g3 && G.paused && !window.__TEST__ && !R3.soft && !view.reduced) G.dirty = true;
     if (G.dirty) { view.personScale = 1; render(ctx, S, dt); G.dirty = false; }
     autoQuality(dt);

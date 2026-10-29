@@ -498,12 +498,20 @@ function buildWaterRide(ctx, o, col) {
 }
 
 // ---------- amphitheater ---------------------------------------------------------------------------------
+// audience spot k: 35 bench seats (front row first), then standing room in the pit before the stage; null when full
+export const AMPHI_SEATS = 35, AMPHI_SPOTS = 35 + 24;
+export function amphiSeat(o, k) {
+  const y = o.h * LH, x0 = o.x, z0 = o.y;
+  if (k < AMPHI_SEATS) { const r = 4 - Math.floor(k / 7), j = k % 7; return { x: x0 + 0.25 + r * 0.42 + 0.21, y: y + 0.06 + (4 - r) * 0.12 + 0.14, z: z0 + 0.625 + j * 0.45, sit: true }; }
+  if (k < AMPHI_SPOTS) { const j = k - AMPHI_SEATS; return { x: x0 + 2.47 + (j % 2) * 0.18, y: y + 0.04, z: z0 + 0.5 + Math.floor(j / 2) * 0.26 + (j % 2) * 0.12, sit: false }; }
+  return null;
+}
 function buildAmphi(ctx, o) {
   const { g, T } = ctx, y = o.h * LH, n = o.n, x0 = o.x, z0 = o.y;
   g.box(x0 + 0.04, y, z0 + 0.04, x0 + n - 0.04, y + 0.04, z0 + n - 0.04, C('#6E9A45'), STONE2, false);
-  // terraced stone seating facing the stage on the +x side
+  // terraced stone seating facing the stage on the +x side, stepping up away from it (amphiSeat gives the same spots)
   for (let r = 0; r < 5; r++) {
-    const xx = x0 + 0.25 + r * 0.42, h = y + 0.06 + r * 0.12;
+    const xx = x0 + 0.25 + r * 0.42, h = y + 0.06 + (4 - r) * 0.12;
     g.box(xx, y, z0 + 0.35, xx + 0.42, h + 0.06, z0 + n - 0.35, r % 2 ? STONE : mix(STONE, C('#B5A88C'), 0.4), STONE2, false);
     for (let k = 0; k < 7; k++) g.box(xx + 0.1, h + 0.06, z0 + 0.45 + k * 0.45, xx + 0.32, h + 0.14, z0 + 0.8 + k * 0.45, C('#C8402E'), C('#9A2A1C'), false);
   }

@@ -12,7 +12,7 @@ export const SLOTS = ['auto', '1', '2', '3'];
 
 export function startGame(opts = {}) {
   const S = newState(opts);
-  G.S = S; G.sel = null; G.tool = 'inspect'; G.placeType = null; G.listing = null; G.panel = null; G.follow = false;
+  G.S = S; G.sel = null; view.sel = null; G.tool = 'inspect'; G.placeType = null; G.listing = null; G.panel = null; G.follow = false;
   G.paused = true; G.speed = 1;
   derived(S);
   G.savedMonths = 0;
@@ -26,7 +26,9 @@ export function startGame(opts = {}) {
 export function homeCamera() {
   const S = G.S, w = S.map.w, gx = S.map.gate % w, gy = Math.floor(S.map.gate / w);
   view.cam.z = view.W < 700 ? 0.9 : 1;
-  centerOn(gx + 0.5, gy - 5, S.map.height[S.map.gate]);
+  // phones: the gate sits just below the screen centre (the tutorial starts there); wide screens look up into the woods
+  if (view.W < 700) centerOn(gx - 0.5, gy - 1.3, S.map.height[S.map.gate]);
+  else centerOn(gx + 0.5, gy - 5, S.map.height[S.map.gate]);
 }
 
 export function runTicks(n) {
@@ -140,7 +142,7 @@ export function loadFrom(slot) {
   return loadState(deserialize(rec.state));
 }
 export function loadState(S) {
-  G.S = S; G.sel = null; G.panel = null; G.tool = 'inspect'; G.paused = true;
+  G.S = S; G.sel = null; view.sel = null; G.panel = null; G.tool = 'inspect'; G.paused = true;
   S._fields = null; touchNet(S); touchObjects(S); S._gmap = null;
   refreshEntries(S); derived(S);
   G.lastMsg = S.msgs.length; G.savedMonths = S.finance.months.length;

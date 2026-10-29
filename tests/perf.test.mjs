@@ -40,12 +40,15 @@ export const tests = [
       const s = await busyPark(t);
       await t.game('resume');
       await t.game('act', 'speed', 1);
-      const fps = await t.fps(3000);
+      // main-thread cost per frame from CDP metrics (sim ticks, 3D draw and DOM together), independent of GPU speed
+      const fc = await t.frameCost(3000);
       const gfx = (await t.state()).gfx;
-      t.log(`fps ${fps.toFixed(1)} with ${s.guests} guests on ${gfx.gpu} (${gfx.quality}); script ${gfx.frameMs} ms per frame, ${gfx.draws} draw calls`);
+      t.log(`fps ${fc.fps} with ${s.guests} guests on ${gfx.gpu} (${gfx.quality}); per frame: script ${fc.scriptMs} ms, tasks ${fc.taskMs} ms, 3D draw ${gfx.frameMs} ms, ${gfx.draws} draw calls`);
       t.expect(gfx.mode === '3d', '3D view active');
-      t.expect(fps >= (gfx.soft ? 1 : 55), `fps floor (${fps.toFixed(1)})`);
-      t.expect(gfx.frameMs <= 12, `script time per 3D frame ≤ 12 ms (${gfx.frameMs})`);
+      t.expect(fc.fps >= (gfx.soft ? 1 : 55), `fps floor (${fc.fps})`);
+      t.expect(fc.scriptMs <= 12, `script time per frame ≤ 12 ms (${fc.scriptMs})`);
+      // the renderer's own timing is one frame; on software GL a single frame can stall, so there only the average gates
+      if (!gfx.soft) t.expect(gfx.frameMs <= 12, `3D draw time of the last frame ≤ 12 ms (${gfx.frameMs})`);
       const mb = await t.memoryMB();
       t.log(`heap ${mb.toFixed(1)} MB`);
       t.expect(mb < 250, 'heap < 250 MB');

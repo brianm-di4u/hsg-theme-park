@@ -6,6 +6,7 @@ import { atSchool } from '../staff.js';
 import { guestById } from '../state.js';
 import { LH, lin } from './geo.js';
 import { decodeModels, modelGeometry } from './trees3d.js';
+import { amphiSeat } from './models3d.js';
 import { U } from './materials3d.js';
 
 const SHIRTS = ['#F26B5B', '#3FBFB5', '#F4C542', '#E26D8E', '#4C8FA8', '#FFF6E0', '#7FA05A', '#B5568F'];
@@ -98,6 +99,7 @@ class Crowd {
 export class People {
   constructor(THREE, scene, mats, R3, world) {
     this.T = THREE; this.world = world; this.R3 = R3; this.count = 0;
+    this.seated = []; this.seatM = new THREE.Matrix4(); this.seatQ = new THREE.Quaternion(); this.seatV = new THREE.Vector3(); this.seatS = new THREE.Vector3();
     const models = decodeModels();
     const pm = models.person, sm = models.person_sit, bm = models.bear;
     this.walkers = new Crowd(THREE, scene, pm ? modelGeometry(THREE, pm) : fallbackPerson(THREE, false), personMaterial(THREE, false), CAP);
@@ -136,11 +138,20 @@ export class People {
     const queueAt = new Map();
     let selPose = null, nu = 0;
     const raining = S.weather.kind === 'rain' || S.weather.kind === 'storm';
+    // the concert audience fills the amphitheater's benches, then the pit; anyone past that is out on the lawn (not drawn)
+    const amphis = S.objects.filter((o) => o.kind === 'special'), aud = new Map(), seated = this.seated;
+    seated.length = 0;
     for (const g of S.guests) {
       if (g.st === 'ride' || g.st === 'gone') continue;
       const c = this.look(g), sc = KIND_SCALE[g.k] || 1;
-      let px = g.x, py = g.y, yaw, walk = 0;
-      if (g.st === 'queue') {
+      let px = g.x, py = g.y, yaw, walk = 0, gy = g.z * LH + 0.035;
+      if (g.st === 'concert' && amphis.length) {
+        let o = amphis[0]; for (const a of amphis) if (Math.abs(a.x + 2 - g.x) + Math.abs(a.y + 2 - g.y) < Math.abs(o.x + 2 - g.x) + Math.abs(o.y + 2 - g.y)) o = a;
+        const k = aud.get(o.id) || 0; aud.set(o.id, k + 1);
+        const s = amphiSeat(o, k); if (!s) continue;
+        if (s.sit) { seated.push([s.x, s.y, s.z, sc, g]); continue; }
+        px = s.x; py = s.z; gy = s.y; yaw = Math.PI / 2 + (hash2(g.id, 5) - 0.5) * 0.5;
+      } else if (g.st === 'queue') {
         const n = queueAt.get(g.ti) || 0; queueAt.set(g.ti, n + 1);
         if (n >= 16) continue;
         const tx = g.ti % w, ty = (g.ti / w) | 0;
@@ -158,13 +169,13 @@ export class People {
         if (g.to >= 0) walk = 1;
         if (g.st === 'sit' || g.st === 'stall' || g.st === 'concert') walk = 0;
       }
-      W.put(px, g.z * LH + 0.035, py, yaw, sc * 0.95, c.shirt, c.pants, c.skin, c.hair, c.ph, view.reduced ? 0 : walk);
+      W.put(px, gy, py, yaw, sc * 0.95, c.shirt, c.pants, c.skin, c.hair, c.ph, view.reduced ? 0 : walk);
       if (raining && nu < CAP && hash2(g.id, 39) < 0.6) {
         this.umbQ.setFromAxisAngle(this.walkers.up, yaw + 0.3); this.umbV.set(px, g.z * LH + 0.035, py); const k2 = sc * 0.95; this.umbS.set(k2, k2, k2);
         this.umbM.compose(this.umbV, this.umbQ, this.umbS); this.umb.setMatrixAt(nu, this.umbM);
         this.umbCol.setRGB(...lin(UMB[Math.floor(hash2(g.id, 41) * UMB.length)])); this.umb.setColorAt(nu, this.umbCol); nu++;
       }
-      if (view.sel && view.sel.kind === 'guest' && view.sel.id === g.id) selPose = [px, g.z * LH + 0.035, py, yaw, sc * 0.95, c.ph, walk];
+      if (view.sel && view.sel.kind === 'guest' && view.sel.id === g.id) selPose = [px, gy, py, yaw, sc * 0.95, c.ph, walk];
     }
     this.umb.count = nu; this.umb.instanceMatrix.needsUpdate = true; if (this.umb.instanceColor) this.umb.instanceColor.needsUpdate = true;
     const X = this.xray; X.begin();
@@ -189,6 +200,8 @@ export class People {
       const c = g ? this.look(g) : { shirt: lin('#F4C542'), pants: lin('#34424A'), skin: lin('#F1C9A5'), hair: lin('#4A3020') };
       R.putMatrix(mat, c.shirt, c.pants, c.skin, c.hair);
     }
+    const sm = this.seatM, sq = this.seatQ.setFromAxisAngle(this.walkers.up, Math.PI / 2), sv = this.seatV, ss = this.seatS;
+    for (const [x, y, z, sc, g] of seated) { const c = this.look(g); sv.set(x, y, z); ss.setScalar(sc * 0.95); sm.compose(sv, sq, ss); R.putMatrix(sm, c.shirt, c.pants, c.skin, c.hair); }
     R.end();
     this.count = W.n + R.n;
     void dt;

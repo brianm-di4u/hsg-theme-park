@@ -3,8 +3,8 @@
 ## Baseline and benchmark
 - Baseline run `--milestone visual-before`: 77/77 at desktop and mobile, 97 shots, every shot inspected through 15
   contact sheets.
-- Benchmarks (official Steam store shots, review only, git-ignored in `benchmarks/`): Planet Coaster 2, Planet Coaster,
-  Parkitect and RollerCoaster Tycoon 3. Sources are listed in `benchmarks/SOURCES.md`.
+- Benchmarks: official store screenshots of four leading 3D park builders, for review only and git-ignored in
+  `benchmarks/`. Sources are listed in `benchmarks/SOURCES.md`.
 - An independent reviewer scored the baseline against them (`benchmarks/REVIEW-before.md`):
 
 | Area | Art | Lighting | Animation/feel | UI | Type | Readability | Mobile | Authenticity |
@@ -16,7 +16,7 @@ terraces and ends in a void; no horizon; guests are specks; queues look like pat
 changes nothing; status chips spam the map; no Hot Springs scenery; flat water.
 
 ## Direction: full 3D with the 2D renderer as fallback
-Parkitect, the closest fit for this camera, is a stylized low-poly 3D game. Our game's scale (48 × 48 tiles, ~60
+The benchmark closest to this camera is a stylized low-poly 3D park builder. Our game's scale (48 × 48 tiles, ~60
 objects, 640+ guests) is easy for WebGL with instancing, and the camera already works like a fixed iso view. 2D sprites
 would need thousands of pre-rendered frames for rides, track pieces in every slope and turn combination, and zoom
 levels, and still could not give real light, shadows or night lighting.

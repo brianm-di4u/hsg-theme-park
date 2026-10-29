@@ -207,6 +207,7 @@ export function draw(S, dt) {
   renderer.info.reset();
   syncCamera();
   world.update(S, dt, camera, view);
+  R3.cutting = world.trees.cut(S, view, camera, tgt, dt);
   const night = world.night || 0;
   // colour grade (weather and time of day) and night bloom go through one composite pass; low quality renders direct
   if (R3.quality !== 'low' && !R3.soft) renderBloom(R3.quality === 'high' && night > 0.2 ? Math.min(1, (night - 0.2) * 1.6) : 0, world.grade || { sat: 1, con: 1, tint: [1, 1, 1] });
