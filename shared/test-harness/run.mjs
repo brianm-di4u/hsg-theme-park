@@ -335,6 +335,22 @@ export async function runSuite({ gameDir, testDir, milestone = 'latest', viewpor
   const runSlow = slow || milestone === 'final';
   const skipped = tests.filter((x) => x.slow && !runSlow);
   tests = tests.filter((x) => !x.slow || runSlow);
+  // On CI (GitHub runners: no GPU, shared CPUs) the tests named in tests/ci-skip.json are skipped. They measure the
+  // machine (frame rates, wall-clock timings, quality tiers) more than the game. Every local run still runs them.
+  const ciSkipFile = path.join(testDir, 'ci-skip.json');
+  if (process.env.CI && fs.existsSync(ciSkipFile)) {
+    const ciSkip = JSON.parse(fs.readFileSync(ciSkipFile, 'utf8'));
+    const onList = (x) => ciSkip.some((s) => x.name.includes(s.test));
+    for (const x of tests.filter(onList)) console.log('ci: skipping ' + x.name);
+    tests = tests.filter((x) => !onList(x));
+  }
+  // HSG_SHARD=k/n runs every n-th test starting at the k-th (1-based), so CI can split a long suite across runners.
+  const shard = /^(\d+)\/(\d+)$/.exec(process.env.HSG_SHARD || '');
+  if (shard) {
+    const k = Number(shard[1]) - 1, n = Number(shard[2]);
+    tests = tests.filter((_, i) => i % n === k);
+    console.log(`shard ${k + 1}/${n}: ${tests.length} test(s)`);
+  }
   if (skipped.length) console.log(`skipping ${skipped.length} slow test(s); add --slow to run them`);
 
   const server = await startServer();
@@ -384,6 +400,8 @@ export async function runSuite({ gameDir, testDir, milestone = 'latest', viewpor
         return route.abort();
       });
       const page = await context.newPage();
+      // On CI the software renderer can need more than Playwright's 30 s default for a screenshot or a wait.
+      if (process.env.CI) context.setDefaultTimeout(90000); // the context, so pages a test opens itself get it too
       page.on('console', (m) => { if (m.type() === 'error') results.consoleErrors.push(m.text()); });
       page.on('pageerror', (e) => results.consoleErrors.push('pageerror: ' + e.message));
 
@@ -397,7 +415,12 @@ export async function runSuite({ gameDir, testDir, milestone = 'latest', viewpor
         : `${origin}/${relGame ? relGame + '/' : ''}${rel}`;
       const started = Date.now();
       try {
-        await page.goto(url, { waitUntil: 'load' });
+        // Windows runners now and then refuse a local socket (ERR_NO_BUFFER_SPACE); one retry gets past it.
+        await page.goto(url, { waitUntil: 'load' }).catch(async (e) => {
+          if (!/ERR_NO_BUFFER_SPACE/.test(String(e))) throw e;
+          await new Promise((r) => setTimeout(r, 2000));
+          await page.goto(url, { waitUntil: 'load' });
+        });
         await page.waitForFunction(() => !!window.__game, null, { timeout: 10000 }).catch(() => t.fail('window.__game test hooks never appeared'));
         t.loadMs = Date.now() - started;
         await test.run(t);
