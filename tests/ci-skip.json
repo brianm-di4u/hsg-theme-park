@@ -1,0 +1,6 @@
+[
+  {
+    "test": "performance (3D view): 500 guests",
+    "why": "needs 1 fps in software WebGL on 642 guests; run 45286557456 drew 0.9 on desktop against 2.9 locally, while script time per frame (4.5 ms) was inside its 12 ms budget"
+  }
+]
