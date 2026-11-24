@@ -1,0 +1,45 @@
+# Runs the game's browser test suite (npm test) on every pull request and on main.
+# Windows runner: the games and their layout tests were tuned against Windows system fonts.
+# Tests listed in tests/ci-skip.json are skipped here because they measure the runner more than the game; local runs keep them.
+# The suite needs only this repo: lookups into the shared workspace (HSG_WORKSPACE) skip or fall back when it is absent.
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: shared/test-harness/package-lock.json
+      - name: Install the test harness and Chromium
+        working-directory: shared/test-harness
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Test
+        run: npm test -- --no-gallery --milestone ci
+      - name: Upload screenshots and report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots/ci
+          retention-days: 7
+          if-no-files-found: ignore
