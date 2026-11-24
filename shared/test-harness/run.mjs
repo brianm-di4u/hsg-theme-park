@@ -421,6 +421,12 @@ export async function runSuite({ gameDir, testDir, milestone = 'latest', viewpor
           await new Promise((r) => setTimeout(r, 2000));
           await page.goto(url, { waitUntil: 'load' });
         });
+        // The same refusal can hit a file the page loads: on CI, load the page once more before the test starts.
+        if (process.env.CI && results.consoleErrors.some((e) => e.includes('ERR_NO_BUFFER_SPACE'))) {
+          await new Promise((r) => setTimeout(r, 2000));
+          results.consoleErrors.length = 0;
+          await page.goto(url, { waitUntil: 'load' });
+        }
         await page.waitForFunction(() => !!window.__game, null, { timeout: 10000 }).catch(() => t.fail('window.__game test hooks never appeared'));
         t.loadMs = Date.now() - started;
         await test.run(t);
